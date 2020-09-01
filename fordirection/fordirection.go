@@ -116,23 +116,6 @@ func getLoopDirection(cond *ast.BinaryExpr, counter *ast.Ident) uint8 {
 	return noneDirection
 }
 
-func getDirectionFromIncDec(incDec *ast.IncDecStmt) uint8 {
-	if incDec.Tok == token.INC {
-		return upToDirection
-	}
-	return downToDirection
-}
-
-func getDirectionAssign(assign *ast.AssignStmt) uint8 {
-	if assign.Tok == token.ADD_ASSIGN {
-		return upToDirection
-	}
-	if assign.Tok == token.SUB_ASSIGN {
-		return downToDirection
-	}
-	return noneDirection
-}
-
 func getReversedComparationTokenString(t token.Token) string {
 	switch t {
 	case token.LSS:
@@ -149,30 +132,6 @@ func getReversedComparationTokenString(t token.Token) string {
 	return ""
 }
 
-func getReversedIncDecTokenString(t token.Token) string {
-	switch t {
-	case token.INC:
-		return "--"
-	case token.DEC:
-		return "++"
-	}
-
-	log.Fatalf("Unexpected token passed to getReversedIncDecTokenString: %#v", t)
-	return ""
-}
-
-func getReversedAssignTokenString(t token.Token) string {
-	switch t {
-	case token.ADD_ASSIGN:
-		return "-="
-	case token.SUB_ASSIGN:
-		return "+="
-	}
-
-	log.Fatalf("Unexpected token passed to getReversedAssignTokenString: %#v", t)
-	return ""
-}
-
 func extractCounterAndCreateSuggestion(post ast.Stmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
 	switch post := post.(type) {
 	case *ast.IncDecStmt:
@@ -182,52 +141,4 @@ func extractCounterAndCreateSuggestion(post ast.Stmt) (*ast.Ident, uint8, analys
 	}
 	// TODO: i = i + 5
 	return nil, 0, analysis.SuggestedFix{}, errors.New("Not increment/descriment.")
-}
-
-func extractCounterAndCreateSuggestionFromIncDec(incDec *ast.IncDecStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
-	counter, _ := incDec.X.(*ast.Ident)
-	if counter == nil {
-		// ここに入ることなさそうだけど一応
-		return nil, 0, analysis.SuggestedFix{}, errors.New("Missing identifier.")
-	}
-
-	incDecDirection := getDirectionFromIncDec(incDec)
-
-	incDecFix := analysis.SuggestedFix{
-		Message: "Reverse increment/decrement (++ to --, -- to ++)",
-		TextEdits: []analysis.TextEdit{{
-			Pos:     incDec.TokPos,
-			End:     incDec.End(),
-			NewText: []byte(getReversedIncDecTokenString(incDec.Tok)),
-		}},
-	}
-
-	return counter, incDecDirection, incDecFix, nil
-}
-
-func extractCounterAndCreateSuggestionFromAssign(assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
-	if len(assign.Lhs) > 1 {
-		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
-	}
-	counter, _ := assign.Lhs[0].(*ast.Ident)
-	if counter == nil {
-		// ここに入ることなさそうだけど一応
-		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
-	}
-
-	assignDirection := getDirectionAssign(assign)
-	if assignDirection == noneDirection {
-		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
-	}
-
-	assignFix := analysis.SuggestedFix{
-		Message: "Reverse assign (+= to -=, -= to +=)",
-		TextEdits: []analysis.TextEdit{{
-			Pos:     assign.TokPos,
-			End:     assign.Rhs[0].Pos(),
-			NewText: []byte(getReversedAssignTokenString(assign.Tok)),
-		}},
-	}
-
-	return counter, assignDirection, assignFix, nil
 }
