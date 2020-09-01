@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	doc = "fordirection is ..."
+	doc = "fordirection finds for-loops which likely has a wrong direction"
 )
 
 const (
