@@ -1,7 +1,6 @@
 package fordirection
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 
@@ -50,13 +49,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		// インクリメント/デクリメントのみ対象
 		incDec, _ := forLoop.Post.(*ast.IncDecStmt)
 		if incDec == nil {
-			fmt.Print("b")
 			return
 		}
 		counter, _ := incDec.X.(*ast.Ident)
 		if counter == nil {
 			// ここに入ることなさそうだけど一応
-			fmt.Print("c")
 			return
 		}
 
