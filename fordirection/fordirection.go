@@ -1,6 +1,7 @@
 package fordirection
 
 import (
+	"errors"
 	"go/ast"
 	"go/token"
 	"log"
@@ -47,14 +48,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		// インクリメント/デクリメントのみ対象
-		incDec, _ := forLoop.Post.(*ast.IncDecStmt)
-		if incDec == nil {
-			return
-		}
-		counter, _ := incDec.X.(*ast.Ident)
-		if counter == nil {
-			// ここに入ることなさそうだけど一応
+		counter, assignDirection, postFix, err := extractCounterAndCreateSuggestion(forLoop.Post)
+		if err != nil {
 			return
 		}
 
@@ -67,8 +62,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		incDecDirection := getDirectionFromIncDec(incDec)
-		if condDirection != incDecDirection {
+		if condDirection != assignDirection {
 			// TODO: Auto detect
 			conditionFix := analysis.SuggestedFix{
 				Message: "Reverse condition (> to <, < to >)",
@@ -78,20 +72,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					NewText: []byte(getReversedComparationTokenString(condBianry.Op)),
 				}},
 			}
-			incDecFix := analysis.SuggestedFix{
-				Message: "Reverse increment (++ to --, -- to ++)",
-				TextEdits: []analysis.TextEdit{{
-					Pos:     incDec.TokPos,
-					End:     incDec.End(),
-					NewText: []byte(getReversedIncDecTokenString(incDec.Tok)),
-				}},
-			}
 
 			pass.Report(analysis.Diagnostic{
 				Pos:            forLoop.Pos(),
 				End:            forLoop.Post.End(),
 				Message:        "Loop direction seems to be wrong.",
-				SuggestedFixes: []analysis.SuggestedFix{conditionFix, incDecFix},
+				SuggestedFixes: []analysis.SuggestedFix{conditionFix, postFix},
 			})
 			return
 		}
@@ -137,6 +123,16 @@ func getDirectionFromIncDec(incDec *ast.IncDecStmt) uint8 {
 	return downToDirection
 }
 
+func getDirectionAssign(assign *ast.AssignStmt) uint8 {
+	if assign.Tok == token.ADD_ASSIGN {
+		return upToDirection
+	}
+	if assign.Tok == token.SUB_ASSIGN {
+		return downToDirection
+	}
+	return noneDirection
+}
+
 func getReversedComparationTokenString(t token.Token) string {
 	switch t {
 	case token.LSS:
@@ -163,4 +159,75 @@ func getReversedIncDecTokenString(t token.Token) string {
 
 	log.Fatalf("Unexpected token passed to getReversedIncDecTokenString: %#v", t)
 	return ""
+}
+
+func getReversedAssignTokenString(t token.Token) string {
+	switch t {
+	case token.ADD_ASSIGN:
+		return "-="
+	case token.SUB_ASSIGN:
+		return "+="
+	}
+
+	log.Fatalf("Unexpected token passed to getReversedAssignTokenString: %#v", t)
+	return ""
+}
+
+func extractCounterAndCreateSuggestion(post ast.Stmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	switch post := post.(type) {
+	case *ast.IncDecStmt:
+		return extractCounterAndCreateSuggestionFromIncDec(post)
+	case *ast.AssignStmt:
+		return extractCounterAndCreateSuggestionFromAssign(post)
+	}
+	// TODO: i = i + 5
+	return nil, 0, analysis.SuggestedFix{}, errors.New("Not increment/descriment.")
+}
+
+func extractCounterAndCreateSuggestionFromIncDec(incDec *ast.IncDecStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	counter, _ := incDec.X.(*ast.Ident)
+	if counter == nil {
+		// ここに入ることなさそうだけど一応
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Missing identifier.")
+	}
+
+	incDecDirection := getDirectionFromIncDec(incDec)
+
+	incDecFix := analysis.SuggestedFix{
+		Message: "Reverse increment/decrement (++ to --, -- to ++)",
+		TextEdits: []analysis.TextEdit{{
+			Pos:     incDec.TokPos,
+			End:     incDec.End(),
+			NewText: []byte(getReversedIncDecTokenString(incDec.Tok)),
+		}},
+	}
+
+	return counter, incDecDirection, incDecFix, nil
+}
+
+func extractCounterAndCreateSuggestionFromAssign(assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	if len(assign.Lhs) > 1 {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+	counter, _ := assign.Lhs[0].(*ast.Ident)
+	if counter == nil {
+		// ここに入ることなさそうだけど一応
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	assignDirection := getDirectionAssign(assign)
+	if assignDirection == noneDirection {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	assignFix := analysis.SuggestedFix{
+		Message: "Reverse assign (+= to -=, -= to +=)",
+		TextEdits: []analysis.TextEdit{{
+			Pos:     assign.TokPos,
+			End:     assign.Rhs[0].Pos(),
+			NewText: []byte(getReversedAssignTokenString(assign.Tok)),
+		}},
+	}
+
+	return counter, assignDirection, assignFix, nil
 }

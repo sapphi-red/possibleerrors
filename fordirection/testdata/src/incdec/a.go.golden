@@ -31,7 +31,7 @@ func a() {
 	}
 }
 
--- Reverse increment (++ to --, -- to ++) --
+-- Reverse increment/decrement (++ to --, -- to ++) --
 package a
 
 import "fmt"
