@@ -3,6 +3,7 @@ package fordirection
 import (
 	"go/ast"
 	"go/token"
+	"log"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -62,14 +63,36 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 		if condDirection == invalidDirection {
-			pass.Reportf(n.Pos(), "loop direction seems to be wrong.")
+			pass.Reportf(n.Pos(), "Loop direction seems to be wrong.")
 			return
 		}
 
 		incDecDirection := getDirectionFromIncDec(incDec)
-
 		if condDirection != incDecDirection {
-			pass.Reportf(n.Pos(), "loop direction seems to be wrong.")
+			// TODO: Auto detect
+			conditionFix := analysis.SuggestedFix{
+				Message: "Reverse condition (> to <, < to >)",
+				TextEdits: []analysis.TextEdit{{
+					Pos:     condBianry.OpPos,
+					End:     condBianry.Y.Pos(),
+					NewText: []byte(getReversedComparationTokenString(condBianry.Op)),
+				}},
+			}
+			incDecFix := analysis.SuggestedFix{
+				Message: "Reverse increment (++ to --, -- to ++)",
+				TextEdits: []analysis.TextEdit{{
+					Pos:     incDec.TokPos,
+					End:     incDec.End(),
+					NewText: []byte(getReversedIncDecTokenString(incDec.Tok)),
+				}},
+			}
+
+			pass.Report(analysis.Diagnostic{
+				Pos:            forLoop.Pos(),
+				End:            forLoop.Post.End(),
+				Message:        "Loop direction seems to be wrong.",
+				SuggestedFixes: []analysis.SuggestedFix{conditionFix, incDecFix},
+			})
 			return
 		}
 	})
@@ -112,4 +135,32 @@ func getDirectionFromIncDec(incDec *ast.IncDecStmt) uint8 {
 		return upToDirection
 	}
 	return downToDirection
+}
+
+func getReversedComparationTokenString(t token.Token) string {
+	switch t {
+	case token.LSS:
+		return ">"
+	case token.GTR:
+		return "<"
+	case token.LEQ:
+		return ">="
+	case token.GEQ:
+		return "<="
+	}
+
+	log.Fatalf("Unexpected token passed to getReversedComparationTokenString: %#v", t)
+	return ""
+}
+
+func getReversedIncDecTokenString(t token.Token) string {
+	switch t {
+	case token.INC:
+		return "--"
+	case token.DEC:
+		return "++"
+	}
+
+	log.Fatalf("Unexpected token passed to getReversedIncDecTokenString: %#v", t)
+	return ""
 }
