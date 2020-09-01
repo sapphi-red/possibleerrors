@@ -33,9 +33,9 @@ func extractCounterAndCreateSuggestionFromIncDec(incDec *ast.IncDecStmt) (*ast.I
 func getReversedIncDecTokenString(t token.Token) string {
 	switch t {
 	case token.INC:
-		return "--"
+		return token.DEC.String()
 	case token.DEC:
-		return "++"
+		return token.INC.String()
 	}
 
 	log.Fatalf("Unexpected token passed to getReversedIncDecTokenString: %#v", t)

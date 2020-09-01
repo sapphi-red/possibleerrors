@@ -49,9 +49,9 @@ func getDirectionAssign(assign *ast.AssignStmt) uint8 {
 func getReversedAssignTokenString(t token.Token) string {
 	switch t {
 	case token.ADD_ASSIGN:
-		return "-="
+		return token.SUB_ASSIGN.String()
 	case token.SUB_ASSIGN:
-		return "+="
+		return token.ADD_ASSIGN.String()
 	}
 
 	log.Fatalf("Unexpected token passed to getReversedAssignTokenString: %#v", t)
