@@ -78,7 +78,22 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		if arrObj != argObj {
 			return
 		}
-		pass.Reportf(n.Pos(), "Likely cause index out of range")
+
+		fix := analysis.SuggestedFix{
+			Message: "Add ` - 1` after `len(arr)`",
+			TextEdits: []analysis.TextEdit{{
+				Pos:     indexCall.End(),
+				End:     indexCall.End(),
+				NewText: []byte("-1"),
+			}},
+		}
+
+		pass.Report(analysis.Diagnostic{
+			Pos:            n.Pos(),
+			End:            n.End(),
+			Message:        "Will occur index out of range",
+			SuggestedFixes: []analysis.SuggestedFix{fix},
+		})
 	})
 
 	return nil, nil
