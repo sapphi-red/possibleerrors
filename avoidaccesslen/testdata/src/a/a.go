@@ -3,12 +3,12 @@ package a
 import "fmt"
 
 func f() {
-	arr := []string{}
-	fmt.Println(arr[len(arr)]) // want "Will occur index out of range"
+	slice := []string{}
+	fmt.Println(slice[len(slice)]) // want "Will occur index out of range"
 
-	arr2 := arr
-	fmt.Println(arr2[len(arr2)]) // want "Will occur index out of range"
+	slice2 := slice
+	fmt.Println(slice2[len(slice2)]) // want "Will occur index out of range"
 
-	arr3 := []string{}
-	fmt.Println(arr3[len(arr)])
+	slice3 := []string{}
+	fmt.Println(slice3[len(slice)])
 }
