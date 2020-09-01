@@ -9,7 +9,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const doc = "avoidaccesslen is ..."
+const doc = "avoidaccesslen is finds `arr[len(arr)]` which occurs index out of range"
 
 // Analyzer is ...
 var Analyzer = &analysis.Analyzer{
