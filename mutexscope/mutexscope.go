@@ -64,6 +64,10 @@ func findLock(lockFunc *types.Func, b *ssa.BasicBlock) (int, ssa.Value) {
 		}
 
 		funcObj := callee.Object()
+
+		if len(callInstr.Call.Args) < 1 {
+			return -1, &ssa.UnOp{}
+		}
 		arg := callInstr.Call.Args[0]
 
 		if funcObj == lockFunc && arg != nil {
@@ -97,6 +101,9 @@ func canReachReturnWithoutUnlock(unlockFunc *types.Func, b *ssa.BasicBlock, star
 		if dfsCanReachReturnWithoutUnlock(unlockFunc, instr, v, seeked) {
 			return true
 		}
+		if isFuncCallWhichIncludesUnlock(unlockFunc, instr, v, seeked) {
+			return false
+		}
 	}
 	return returnInstr != nil
 }
@@ -115,6 +122,25 @@ func dfsCanReachReturnWithoutUnlock(unlockFunc *types.Func, instr ssa.Instructio
 		succs := instr.Block().Succs
 		if canReachReturnWithoutUnlock(unlockFunc, succs[0], 0, v, seeked) {
 			return true
+		}
+	}
+	return false
+}
+
+func isFuncCallWhichIncludesUnlock(unlockFunc *types.Func, instr ssa.Instruction, v ssa.Value, seeked map[*ssa.BasicBlock]struct{}) bool {
+	callInstr, _ := instr.(*ssa.Call)
+	if callInstr == nil {
+		return false
+	}
+
+	callee := callInstr.Call.StaticCallee()
+	if callee != nil {
+		blocks := callee.Blocks
+		// nilのときパッケージ外
+		if blocks != nil {
+			if !canReachReturnWithoutUnlock(unlockFunc, blocks[0], 0, v, seeked) {
+				return true
+			}
 		}
 	}
 	return false

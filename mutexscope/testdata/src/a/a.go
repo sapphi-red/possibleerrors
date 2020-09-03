@@ -56,3 +56,27 @@ func f7() {
 	}
 	mu.Unlock()
 }
+
+func f8() {
+	mu.Lock()
+	g()
+}
+
+func g() {
+	mu.Unlock()
+}
+
+func f9() {
+	mu.Lock()
+	g()
+}
+
+func g1() {
+	for i := 0; i < 100; i++ {
+		g2()
+	}
+}
+
+func g2() {
+	mu.Unlock()
+}
