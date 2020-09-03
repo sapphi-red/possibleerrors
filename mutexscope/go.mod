@@ -1,6 +1,6 @@
 module github.com/sapphi-red/possibleerrors/mutexscope
 
-go 1.14
+go 1.15
 
 require (
 	github.com/gostaticanalysis/analysisutil v0.1.0
