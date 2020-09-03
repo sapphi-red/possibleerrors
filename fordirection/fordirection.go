@@ -119,13 +119,13 @@ func getLoopDirection(cond *ast.BinaryExpr, counter *ast.Ident) uint8 {
 func getReversedComparationTokenString(t token.Token) string {
 	switch t {
 	case token.LSS:
-		return ">"
+		return token.GTR.String()
 	case token.GTR:
-		return "<"
+		return token.LSS.String()
 	case token.LEQ:
-		return ">="
+		return token.GEQ.String()
 	case token.GEQ:
-		return "<="
+		return token.LEQ.String()
 	}
 
 	log.Fatalf("Unexpected token passed to getReversedComparationTokenString: %#v", t)
