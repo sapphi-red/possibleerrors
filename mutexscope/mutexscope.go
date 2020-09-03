@@ -109,18 +109,9 @@ func canReachReturnWithoutUnlock(unlockFunc *types.Func, b *ssa.BasicBlock, star
 }
 
 func dfsCanReachReturnWithoutUnlock(unlockFunc *types.Func, instr ssa.Instruction, v ssa.Value, seeked map[*ssa.BasicBlock]struct{}) bool {
-	switch instr := instr.(type) {
-	case *ssa.If:
-		succs := instr.Block().Succs
-		if canReachReturnWithoutUnlock(unlockFunc, succs[0], 0, v, seeked) {
-			return true
-		}
-		if len(succs) >= 2 && canReachReturnWithoutUnlock(unlockFunc, succs[1], 0, v, seeked) {
-			return true
-		}
-	case *ssa.Jump:
-		succs := instr.Block().Succs
-		if canReachReturnWithoutUnlock(unlockFunc, succs[0], 0, v, seeked) {
+	succs := instr.Block().Succs
+	for _, succ := range succs {
+		if canReachReturnWithoutUnlock(unlockFunc, succ, 0, v, seeked) {
 			return true
 		}
 	}
