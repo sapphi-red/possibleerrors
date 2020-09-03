@@ -55,18 +55,18 @@ func findLock(lockFunc *types.Func, b *ssa.BasicBlock) (int, ssa.Value) {
 	for index, instr := range b.Instrs {
 		callInstr, _ := instr.(*ssa.Call)
 		if callInstr == nil {
-			return -1, &ssa.UnOp{}
+			return -1, nil
 		}
 
 		callee := callInstr.Call.StaticCallee()
 		if callee == nil {
-			return -1, &ssa.UnOp{}
+			return -1, nil
 		}
 
 		funcObj := callee.Object()
 
 		if len(callInstr.Call.Args) < 1 {
-			return -1, &ssa.UnOp{}
+			return -1, nil
 		}
 		arg := callInstr.Call.Args[0]
 
@@ -74,7 +74,7 @@ func findLock(lockFunc *types.Func, b *ssa.BasicBlock) (int, ssa.Value) {
 			return index, arg
 		}
 	}
-	return -1, &ssa.UnOp{}
+	return -1, nil
 }
 
 func canReachReturnWithoutUnlock(unlockFunc *types.Func, b *ssa.BasicBlock, start int, v ssa.Value, seeked map[*ssa.BasicBlock]struct{}) bool {
