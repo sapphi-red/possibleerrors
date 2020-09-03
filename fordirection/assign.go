@@ -12,6 +12,22 @@ import (
 )
 
 func extractCounterAndCreateSuggestionFromAssign(pass *analysis.Pass, assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	if isCompoundAssign(assign.Tok) {
+		return extractCounterAndCreateSuggestionFromCompoundAssign(pass, assign)
+	}
+	if isSimpleAssign(assign.Tok) {
+		return extractCounterAndCreateSuggestionFromSimpleAssign(pass, assign)
+	}
+	return nil, 0, analysis.SuggestedFix{}, errors.New("Not an expected assignment.")
+}
+
+
+func extractCounterAndCreateSuggestionFromCompoundAssign(pass *analysis.Pass, assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	assignDirection := getDirectionAssign(assign)
+	if assignDirection == noneDirection {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
 	if len(assign.Lhs) > 1 || len(assign.Rhs) > 1 {
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
@@ -35,11 +51,6 @@ func extractCounterAndCreateSuggestionFromAssign(pass *analysis.Pass, assign *as
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
 
-	assignDirection := getDirectionAssign(assign)
-	if assignDirection == noneDirection {
-		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
-	}
-
 	if invertDirection {
 		if assignDirection == upToDirection {
 			assignDirection = downToDirection
@@ -60,11 +71,91 @@ func extractCounterAndCreateSuggestionFromAssign(pass *analysis.Pass, assign *as
 	return counter, assignDirection, assignFix, nil
 }
 
+func extractCounterAndCreateSuggestionFromSimpleAssign(pass *analysis.Pass, assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	if len(assign.Lhs) > 1 || len(assign.Rhs) > 1 {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	rightBinaryExpr, _ := assign.Rhs[0].(*ast.BinaryExpr)
+	if rightBinaryExpr == nil {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	counter, _ := assign.Lhs[0].(*ast.Ident)
+	if counter == nil {
+		// ここに入ることなさそうだけど一応
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	rightXIdent := rightBinaryExpr.X.(*ast.Ident)
+	rightYIdent := rightBinaryExpr.Y.(*ast.Ident)
+	if rightXIdent != counter && rightYIdent != counter {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	diffNumExpr := rightBinaryExpr.X
+	if rightXIdent == counter {
+		diffNumExpr = rightBinaryExpr.Y
+	}
+
+	rhsType := pass.TypesInfo.Types[diffNumExpr]
+	invertDirection := false
+	// 値がわかっているとき
+	if rhsType.Value != nil {
+		if rhsType.Value.Kind() != constant.Int && rhsType.Value.Kind() != constant.Float {
+			return nil, 0, analysis.SuggestedFix{}, errors.New("Assigned value is not constant.")
+		}
+		// 値が負のときは方向を反転
+		if strings.HasPrefix(rhsType.Value.ExactString(), "-") {
+			invertDirection = true
+		}
+	}
+
+	assignDirection := getDirectionBinary(rightBinaryExpr)
+
+	if invertDirection {
+		if assignDirection == upToDirection {
+			assignDirection = downToDirection
+		} else if assignDirection == downToDirection {
+			assignDirection = upToDirection
+		}
+	}
+
+	assignFix := analysis.SuggestedFix{
+		Message: "Reverse assign (+ to -, - to +)",
+		TextEdits: []analysis.TextEdit{{
+			Pos:     rightBinaryExpr.OpPos,
+			End:     rightBinaryExpr.Y.Pos(),
+			NewText: []byte(getReversedBinaryTokenString(rightBinaryExpr.Op)),
+		}},
+	}
+
+	return counter, assignDirection, assignFix, nil
+}
+
+func isCompoundAssign(tok token.Token) bool {
+	return tok == token.ADD_ASSIGN || tok == token.SUB_ASSIGN
+}
+
+func isSimpleAssign(tok token.Token) bool {
+	return tok == token.ASSIGN
+}
+
 func getDirectionAssign(assign *ast.AssignStmt) uint8 {
 	if assign.Tok == token.ADD_ASSIGN {
 		return upToDirection
 	}
 	if assign.Tok == token.SUB_ASSIGN {
+		return downToDirection
+	}
+	return noneDirection
+}
+
+func getDirectionBinary(binary *ast.BinaryExpr) uint8 {
+	if binary.Op == token.ADD {
+		return upToDirection
+	}
+	if binary.Op == token.SUB {
 		return downToDirection
 	}
 	return noneDirection
@@ -79,5 +170,17 @@ func getReversedAssignTokenString(t token.Token) string {
 	}
 
 	log.Fatalf("Unexpected token passed to getReversedAssignTokenString: %#v", t)
+	return ""
+}
+
+func getReversedBinaryTokenString(t token.Token) string {
+	switch t {
+	case token.ADD:
+		return token.SUB.String()
+	case token.SUB:
+		return token.ADD.String()
+	}
+
+	log.Fatalf("Unexpected token passed to getReversedBinaryTokenString: %#v", t)
 	return ""
 }

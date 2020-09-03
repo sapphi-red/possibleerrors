@@ -140,6 +140,5 @@ func extractCounterAndCreateSuggestion(pass *analysis.Pass, post ast.Stmt) (*ast
 	case *ast.AssignStmt:
 		return extractCounterAndCreateSuggestionFromAssign(pass, post)
 	}
-	// TODO: i = i + 5
 	return nil, 0, analysis.SuggestedFix{}, errors.New("Not increment/descriment.")
 }
