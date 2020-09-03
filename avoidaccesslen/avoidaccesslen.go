@@ -21,6 +21,8 @@ var Analyzer = &analysis.Analyzer{
 	},
 }
 
+var lenObj = types.Universe.Lookup("len")
+
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
@@ -30,25 +32,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		indexAccess := n.(*ast.IndexExpr)
-		arr := indexAccess.X
-		arrType := pass.TypesInfo.Types[arr]
-
-		T := arrType.Type.Underlying()
-		_, ok := T.(*types.Slice)
-		if !ok {
+		arrObj := extractArrObj(pass, indexAccess)
+		if arrObj == nil {
 			return
 		}
-
-		arrRightId, _ := arr.(*ast.Ident)
-		if arrRightId == nil {
-			arrSelector, _ := arr.(*ast.SelectorExpr)
-			if arrSelector == nil {
-				return
-			}
-			arrRightId = arrSelector.Sel
-		}
-
-		arrObj := pass.TypesInfo.Uses[arrRightId]
 
 		index := indexAccess.Index
 		indexCall, _ := index.(*ast.CallExpr)
@@ -56,25 +43,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		indexFunc := indexCall.Fun
-		indexFuncId, _ := indexFunc.(*ast.Ident)
-		if indexFuncId == nil {
-			return
-		}
-
-		lenObj := types.Universe.Lookup("len")
-		indexFuncObj := pass.TypesInfo.Uses[indexFuncId]
+		indexFuncObj := extractIndexFuncObj(pass, indexCall)
 		if lenObj != indexFuncObj {
 			return
 		}
 
-		args := indexCall.Args
-		if len(args) != 1 {
-			return
-		}
-
-		argId := args[0].(*ast.Ident)
-		argObj := pass.TypesInfo.Uses[argId]
+		argObj := extractIndexFuncArgObj(pass, indexCall)
 		if arrObj != argObj {
 			return
 		}
@@ -97,4 +71,46 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	})
 
 	return nil, nil
+}
+
+func extractArrObj(pass *analysis.Pass, indexAccess *ast.IndexExpr) types.Object {
+	arr := indexAccess.X
+	arrType := pass.TypesInfo.Types[arr]
+
+	T := arrType.Type.Underlying()
+	_, ok := T.(*types.Slice)
+	if !ok {
+		return nil
+	}
+
+	arrRightId, _ := arr.(*ast.Ident)
+	if arrRightId == nil {
+		arrSelector, _ := arr.(*ast.SelectorExpr)
+		if arrSelector == nil {
+			return nil
+		}
+		arrRightId = arrSelector.Sel
+	}
+
+	return pass.TypesInfo.Uses[arrRightId]
+}
+
+func extractIndexFuncObj(pass *analysis.Pass, indexCall *ast.CallExpr) types.Object {
+	indexFunc := indexCall.Fun
+	indexFuncId, _ := indexFunc.(*ast.Ident)
+	if indexFuncId == nil {
+		return nil
+	}
+
+	return pass.TypesInfo.Uses[indexFuncId]
+}
+
+func extractIndexFuncArgObj(pass *analysis.Pass, indexCall *ast.CallExpr) types.Object {
+	args := indexCall.Args
+	if len(args) != 1 {
+		return nil
+	}
+
+	argId := args[0].(*ast.Ident)
+	return pass.TypesInfo.Uses[argId]
 }
