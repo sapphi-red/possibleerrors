@@ -9,7 +9,7 @@ import (
 	"golang.org/x/tools/go/ssa"
 )
 
-const doc = "mutexscope is ..."
+const doc = "mutexscope mutexscope finds sync.Mutex which likely forgotten .Unlock()."
 
 // Analyzer is ...
 var Analyzer = &analysis.Analyzer{
