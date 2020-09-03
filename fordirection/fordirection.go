@@ -48,7 +48,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		counter, assignDirection, postFix, err := extractCounterAndCreateSuggestion(forLoop.Post)
+		counter, assignDirection, postFix, err := extractCounterAndCreateSuggestion(pass, forLoop.Post)
+		// 複雑な形式の場合は無視
 		if err != nil {
 			return
 		}
@@ -132,12 +133,12 @@ func getReversedComparationTokenString(t token.Token) string {
 	return ""
 }
 
-func extractCounterAndCreateSuggestion(post ast.Stmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+func extractCounterAndCreateSuggestion(pass *analysis.Pass, post ast.Stmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
 	switch post := post.(type) {
 	case *ast.IncDecStmt:
 		return extractCounterAndCreateSuggestionFromIncDec(post)
 	case *ast.AssignStmt:
-		return extractCounterAndCreateSuggestionFromAssign(post)
+		return extractCounterAndCreateSuggestionFromAssign(pass, post)
 	}
 	// TODO: i = i + 5
 	return nil, 0, analysis.SuggestedFix{}, errors.New("Not increment/descriment.")

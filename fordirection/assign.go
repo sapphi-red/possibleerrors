@@ -3,16 +3,32 @@ package fordirection
 import (
 	"errors"
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"log"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 )
 
-func extractCounterAndCreateSuggestionFromAssign(assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
-	if len(assign.Lhs) > 1 {
+func extractCounterAndCreateSuggestionFromAssign(pass *analysis.Pass, assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
+	if len(assign.Lhs) > 1 || len(assign.Rhs) > 1 {
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
+
+	rhsType := pass.TypesInfo.Types[assign.Rhs[0]]
+	invertDirection := false
+	// 値がわかっているとき
+	if rhsType.Value != nil {
+		if rhsType.Value.Kind() != constant.Int && rhsType.Value.Kind() != constant.Float {
+			return nil, 0, analysis.SuggestedFix{}, errors.New("Assigned value is not constant.")
+		}
+		// 値が負のときは方向を反転
+		if strings.HasPrefix(rhsType.Value.ExactString(), "-") {
+			invertDirection = true
+		}
+	}
+
 	counter, _ := assign.Lhs[0].(*ast.Ident)
 	if counter == nil {
 		// ここに入ることなさそうだけど一応
@@ -22,6 +38,14 @@ func extractCounterAndCreateSuggestionFromAssign(assign *ast.AssignStmt) (*ast.I
 	assignDirection := getDirectionAssign(assign)
 	if assignDirection == noneDirection {
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
+	}
+
+	if invertDirection {
+		if assignDirection == upToDirection {
+			assignDirection = downToDirection
+		} else if assignDirection == downToDirection {
+			assignDirection = upToDirection
+		}
 	}
 
 	assignFix := analysis.SuggestedFix{
