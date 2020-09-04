@@ -89,6 +89,7 @@ archives:
       - fordirection-golangci-lint
       - avoidaccesslen-golangci-lint
       - mutexscope-golangci-lint
+    name_template: "{{ .ProjectName }}_golang-ci-lint-plugin_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     replacements:
       darwin: macOS
       386: 32bit
