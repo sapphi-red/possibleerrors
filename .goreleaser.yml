@@ -20,12 +20,16 @@ builds:
     binary: fordirection-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
       - darwin
     goarch:
       - '386'
       - amd64
+      - arm
+      - arm64
   - id: avoidaccesslen
     dir: avoidaccesslen
     main: ./cmd/avoidaccesslen/main.go
@@ -47,12 +51,16 @@ builds:
     binary: avoidaccesslen-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
       - darwin
     goarch:
       - '386'
       - amd64
+      - arm
+      - arm64
   - id: mutexscope
     dir: mutexscope
     main: ./cmd/mutexscope/main.go
@@ -74,9 +82,13 @@ builds:
     binary: mutexscope-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
       - darwin
     goarch:
       - '386'
       - amd64
+      - arm
+      - arm64
