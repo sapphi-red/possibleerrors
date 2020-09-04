@@ -80,3 +80,9 @@ func g1() {
 func g2() {
 	mu.Unlock()
 }
+
+func f10() {
+  mu.Lock()
+  u := &mu
+  u.Unlock()
+}

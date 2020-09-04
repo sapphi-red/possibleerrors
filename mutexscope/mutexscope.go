@@ -65,12 +65,22 @@ func findLock(lockFunc *types.Func, b *ssa.BasicBlock) (int, ssa.Value) {
 
 		funcObj := callee.Object()
 
-		if len(callInstr.Call.Args) < 1 {
+		ops := instr.Operands(nil)
+		if len(ops) < 2 {
 			continue
 		}
-		arg := callInstr.Call.Args[0]
 
-		if funcObj == lockFunc && arg != nil {
+		arg := *ops[1]
+		if arg == nil {
+			continue
+		}
+
+		fieldArg, _ := arg.(*ssa.FieldAddr)
+		if fieldArg != nil {
+			arg = fieldArg.X
+		}
+
+		if funcObj == lockFunc {
 			return index, arg
 		}
 	}
@@ -156,10 +166,21 @@ func isUnlockCallCommon(unlockFunc *types.Func, v ssa.Value, cc ssa.CallCommon) 
 	}
 
 	funcObj := callee.Object()
-	if len(cc.Args) < 1 {
+
+	ops := cc.Operands(nil)
+	if len(ops) < 2 {
 		return false
 	}
-	arg := cc.Args[0]
+
+	arg := *ops[1]
+	if arg == nil {
+		return false
+	}
+
+	fieldArg, _ := arg.(*ssa.FieldAddr)
+	if fieldArg != nil {
+		arg = fieldArg.X
+	}
 
 	if funcObj == unlockFunc && arg == v {
 		return true
