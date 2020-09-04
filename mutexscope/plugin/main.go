@@ -34,3 +34,5 @@ func (analyzerPlugin) GetAnalyzers() []*analysis.Analyzer {
 	}
 }
 
+// This is a plugin, so main isn't necessary, but we need it for goreleaser.
+func main() {}

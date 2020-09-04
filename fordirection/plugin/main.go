@@ -33,3 +33,6 @@ func (analyzerPlugin) GetAnalyzers() []*analysis.Analyzer {
 		fordirection.Analyzer,
 	}
 }
+
+// This is a plugin, so main isn't necessary, but we need it for goreleaser.
+func main() {}
