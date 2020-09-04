@@ -13,3 +13,14 @@ func f() {
   mu.Unlock()
 }
 ```
+
+## Caveats
+```go
+var mu sync.Mutex
+
+func f2() {
+	mu.Lock() // it fails to detect this
+	mu = sync.Mutex{}
+	mu.Unlock()
+}
+```
