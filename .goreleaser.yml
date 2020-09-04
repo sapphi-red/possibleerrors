@@ -12,8 +12,6 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
   - id: fordirection-golangci-lint
     dir: fordirection
     main: ./plugin/main.go
@@ -28,8 +26,6 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
   - id: avoidaccesslen
     dir: avoidaccesslen
     main: ./cmd/avoidaccesslen/main.go
@@ -59,8 +55,6 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
   - id: mutexscope
     dir: mutexscope
     main: ./cmd/mutexscope/main.go
@@ -90,5 +84,3 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
