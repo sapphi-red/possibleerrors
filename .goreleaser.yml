@@ -72,3 +72,24 @@ builds:
       - linux
     goarch:
       - amd64
+archives:
+  - builds:
+      - fordirection
+      - avoidaccesslen
+      - mutexscope
+    replacements:
+      darwin: macOS
+      386: 32bit
+      arm64: 64bit
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: golang-ci-lint
+    builds:
+      - fordirection-golangci-lint
+      - avoidaccesslen-golangci-lint
+      - mutexscope-golangci-lint
+    replacements:
+      darwin: macOS
+      386: 32bit
+      arm64: 64bit
