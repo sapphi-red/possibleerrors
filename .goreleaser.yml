@@ -80,7 +80,7 @@ archives:
     replacements:
       darwin: macOS
       386: 32bit
-      arm64: 64bit
+      amd64: 64bit
     format_overrides:
       - goos: windows
         format: zip
@@ -93,4 +93,4 @@ archives:
     replacements:
       darwin: macOS
       386: 32bit
-      arm64: 64bit
+      amd64: 64bit
