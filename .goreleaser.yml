@@ -1,0 +1,91 @@
+builds:
+  - id: fordirection
+    dir: fordirection
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: fordirection-golangci-lint
+    dir: fordirection
+    main: ./plugin/main.go
+    binary: fordirection-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: avoidaccesslen
+    dir: avoidaccesslen
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: avoidaccesslen-golangci-lint
+    dir: avoidaccesslen
+    main: ./plugin/main.go
+    binary: avoidaccesslen-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: mutexscope
+    dir: mutexscope
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: mutexscope-golangci-lint
+    dir: mutexscope
+    main: ./plugin/main.go
+    binary: mutexscope-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
