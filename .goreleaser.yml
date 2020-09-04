@@ -18,6 +18,8 @@ builds:
     binary: fordirection-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
     goarch:
@@ -43,6 +45,8 @@ builds:
     binary: avoidaccesslen-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
     goarch:
@@ -68,6 +72,8 @@ builds:
     binary: mutexscope-golangci-lint
     flags:
       - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
     goarch:
