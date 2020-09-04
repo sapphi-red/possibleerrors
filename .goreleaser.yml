@@ -19,8 +19,6 @@ builds:
     binary: fordirection-golangci-lint
     flags:
       - -buildmode=plugin
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -49,8 +47,6 @@ builds:
     binary: avoidaccesslen-golangci-lint
     flags:
       - -buildmode=plugin
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -79,8 +75,6 @@ builds:
     binary: mutexscope-golangci-lint
     flags:
       - -buildmode=plugin
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
