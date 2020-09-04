@@ -55,18 +55,18 @@ func findLock(lockFunc *types.Func, b *ssa.BasicBlock) (int, ssa.Value) {
 	for index, instr := range b.Instrs {
 		callInstr, _ := instr.(*ssa.Call)
 		if callInstr == nil {
-			return -1, nil
+			continue
 		}
 
 		callee := callInstr.Call.StaticCallee()
 		if callee == nil {
-			return -1, nil
+			continue
 		}
 
 		funcObj := callee.Object()
 
 		if len(callInstr.Call.Args) < 1 {
-			return -1, nil
+			continue
 		}
 		arg := callInstr.Call.Args[0]
 
