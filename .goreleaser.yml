@@ -2,6 +2,7 @@ builds:
   - id: fordirection
     dir: fordirection
     main: ./cmd/fordirection/main.go
+    binary: fordirection
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,11 +26,10 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
   - id: avoidaccesslen
     dir: avoidaccesslen
     main: ./cmd/avoidaccesslen/main.go
+    binary: avoidaccesslen
     env:
       - CGO_ENABLED=0
     goos:
@@ -53,11 +53,10 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
   - id: mutexscope
     dir: mutexscope
     main: ./cmd/mutexscope/main.go
+    binary: mutexscope
     env:
       - CGO_ENABLED=0
     goos:
@@ -81,5 +80,3 @@ builds:
     goarch:
       - '386'
       - amd64
-      - arm
-      - arm64
