@@ -24,7 +24,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - '386'
       - amd64
@@ -55,7 +54,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - '386'
       - amd64
@@ -86,7 +84,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - '386'
       - amd64
