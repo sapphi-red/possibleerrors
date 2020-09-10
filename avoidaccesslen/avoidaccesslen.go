@@ -38,36 +38,25 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		index := indexAccess.Index
-		indexCall, _ := index.(*ast.CallExpr)
-		if indexCall == nil {
-			return
+
+		var fixes *[]analysis.SuggestedFix
+		if binaryExpr, _ := index.(*ast.BinaryExpr); binaryExpr != nil {
+			fixes = hasConstantOnLeft(pass, arrObj, binaryExpr)
+			if fixes == nil {
+				fixes = hasConstantOnRight(pass, arrObj, binaryExpr)
+			}
+		} else {
+			fixes = hasNoConstant(pass, arrObj, index)
 		}
 
-		indexFuncObj := extractIndexFuncObj(pass, indexCall)
-		if lenObj != indexFuncObj {
-			return
+		if fixes != nil {
+			pass.Report(analysis.Diagnostic{
+				Pos:            n.Pos(),
+				End:            n.End(),
+				Message:        "Will occur index out of range",
+				SuggestedFixes: *fixes,
+			})
 		}
-
-		argObj := extractIndexFuncArgObj(pass, indexCall)
-		if arrObj != argObj {
-			return
-		}
-
-		fix := analysis.SuggestedFix{
-			Message: "Add ` - 1` after `len(arr)`",
-			TextEdits: []analysis.TextEdit{{
-				Pos:     indexCall.End(),
-				End:     indexCall.End(),
-				NewText: []byte("-1"),
-			}},
-		}
-
-		pass.Report(analysis.Diagnostic{
-			Pos:            n.Pos(),
-			End:            n.End(),
-			Message:        "Will occur index out of range",
-			SuggestedFixes: []analysis.SuggestedFix{fix},
-		})
 	})
 
 	return nil, nil
