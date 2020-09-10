@@ -21,7 +21,6 @@ func extractCounterAndCreateSuggestionFromAssign(pass *analysis.Pass, assign *as
 	return nil, 0, analysis.SuggestedFix{}, errors.New("Not an expected assignment.")
 }
 
-
 func extractCounterAndCreateSuggestionFromCompoundAssign(pass *analysis.Pass, assign *ast.AssignStmt) (*ast.Ident, uint8, analysis.SuggestedFix, error) {
 	assignDirection := getDirectionAssign(assign)
 	if assignDirection == noneDirection {
@@ -87,15 +86,21 @@ func extractCounterAndCreateSuggestionFromSimpleAssign(pass *analysis.Pass, assi
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
 
-	rightXIdent := rightBinaryExpr.X.(*ast.Ident)
-	rightYIdent := rightBinaryExpr.Y.(*ast.Ident)
-	if rightXIdent != counter && rightYIdent != counter {
+	rightXIdent, _ := rightBinaryExpr.X.(*ast.Ident)
+	rightYIdent, _ := rightBinaryExpr.Y.(*ast.Ident)
+	if rightXIdent == nil && rightYIdent == nil {
 		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
 
-	diffNumExpr := rightBinaryExpr.X
-	if rightXIdent == counter {
-		diffNumExpr = rightBinaryExpr.Y
+	var diffNumExpr ast.Expr = nil
+	if rightXIdent != nil && rightXIdent.Name == counter.Name {
+		diffNumExpr = rightYIdent
+	}
+	if rightYIdent != nil && rightYIdent.Name == counter.Name {
+		diffNumExpr = rightXIdent
+	}
+	if diffNumExpr == nil {
+		return nil, 0, analysis.SuggestedFix{}, errors.New("Not a simple assignment.")
 	}
 
 	rhsType := pass.TypesInfo.Types[diffNumExpr]

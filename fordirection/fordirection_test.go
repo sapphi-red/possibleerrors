@@ -12,4 +12,5 @@ func TestAnalyzer(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.RunWithSuggestedFixes(t, testdata, fordirection.Analyzer, "incdec")
 	analysistest.RunWithSuggestedFixes(t, testdata, fordirection.Analyzer, "assign")
+	analysistest.RunWithSuggestedFixes(t, testdata, fordirection.Analyzer, "simpleassign")
 }
