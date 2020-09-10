@@ -1,0 +1,102 @@
+builds:
+  - id: fordirection
+    dir: fordirection
+    main: ./cmd/fordirection/main.go
+    binary: fordirection
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+  - id: fordirection-golangci-lint
+    dir: fordirection
+    main: ./plugin/main.go
+    binary: fordirection-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: avoidaccesslen
+    dir: avoidaccesslen
+    main: ./cmd/avoidaccesslen/main.go
+    binary: avoidaccesslen
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: avoidaccesslen-golangci-lint
+    dir: avoidaccesslen
+    main: ./plugin/main.go
+    binary: avoidaccesslen-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: mutexscope
+    dir: mutexscope
+    main: ./cmd/mutexscope/main.go
+    binary: mutexscope
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+  - id: mutexscope-golangci-lint
+    dir: mutexscope
+    main: ./plugin/main.go
+    binary: mutexscope-golangci-lint
+    flags:
+      - -buildmode=plugin
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+archives:
+  - builds:
+      - fordirection
+      - avoidaccesslen
+      - mutexscope
+    replacements:
+      darwin: macOS
+      386: 32bit
+      amd64: 64bit
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: golang-ci-lint
+    builds:
+      - fordirection-golangci-lint
+      - avoidaccesslen-golangci-lint
+      - mutexscope-golangci-lint
+    name_template: "{{ .ProjectName }}_golang-ci-lint-plugin_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      darwin: macOS
+      386: 32bit
+      amd64: 64bit
